@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brasileirão Série A — dashboard analítico | Daniel Garcia Costa</title>
+<meta name="description" content="Três temporadas do Campeonato Brasileiro em Power BI: extração via API, modelagem dimensional e identidade visual gerada em código.">
+<meta property="og:title" content="Brasileirão Série A — dashboard analítico">
+<meta property="og:description" content="1.040 partidas, 27 clubes, três temporadas. Power BI, DAX, Power Query M e Python.">
+<meta property="og:image" content="telas/02-visao-geral.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --petroleo:#0C3A42;
+    --fundo-claro:#F1F3F1;
+    --ouro:#E0B52A;
+    --papel:#F2F4F2;
+    --papel-dim:#A9BDBE;
+    --tinta:#16262A;
+    --tinta-dim:#57696C;
+    --linha:rgba(242,244,242,.14);
+    --linha-clara:#D7DEDC;
+    --verde:#2E9E63;
+    --azul:#4A8FD4;
+    --vermelho:#D4504F;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--fundo-claro);color:var(--tinta);
+    font:400 17px/1.65 Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+  h1,h2,h3{margin:0;font-weight:800;letter-spacing:-.022em;line-height:1.05}
+  p{margin:0 0 16px}
+  a{color:inherit}
+
+  /* ---------------- abertura ---------------- */
+  .hero{background:var(--petroleo);color:var(--papel);padding:74px 0 66px}
+  .hero-grid{display:grid;grid-template-columns:1fr 290px;gap:54px;align-items:center}
+  .marca{display:flex;align-items:center;gap:11px;margin-bottom:30px}
+  .marca i{width:5px;height:22px;background:var(--ouro);border-radius:1px}
+  .marca span{font-weight:600;font-size:15px}
+  h1{font-size:clamp(38px,5.8vw,66px)}
+  .hero p{max-width:47ch;color:var(--papel-dim);font-size:19px;margin:22px 0 0}
+  .tabela{border:1px solid var(--linha);border-radius:3px;background:rgba(0,0,0,.16)}
+  .tabela div{display:grid;grid-template-columns:28px 1fr auto;gap:10px;padding:7px 12px;
+    font-size:14px;align-items:center;border-bottom:1px solid rgba(242,244,242,.07)}
+  .tabela div:last-child{border-bottom:0}
+  .tabela b{font-weight:600;color:var(--papel-dim);font-variant-numeric:tabular-nums}
+  .tabela em{font-style:normal;color:var(--papel-dim);font-variant-numeric:tabular-nums}
+  .z1{box-shadow:inset 3px 0 0 var(--verde)}
+  .z2{box-shadow:inset 3px 0 0 var(--azul)}
+  .z3{box-shadow:inset 3px 0 0 var(--vermelho)}
+  .legenda{margin-top:11px;font-size:13px;color:var(--papel-dim)}
+
+  /* ---------------- números ---------------- */
+  .faixa{background:#fff;border-bottom:1px solid var(--linha-clara);padding:30px 0}
+  .nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:22px}
+  .nums span{display:block;font-size:30px;font-weight:800;letter-spacing:-.03em;
+    font-variant-numeric:tabular-nums}
+  .nums small{display:block;font-size:13px;color:var(--tinta-dim);margin-top:1px}
+
+  /* ---------------- telas ---------------- */
+  .telas{padding:70px 0 20px}
+  .intro{max-width:62ch;margin-bottom:52px}
+  h2{font-size:clamp(26px,3.2vw,34px);margin-bottom:16px}
+  .intro p{color:var(--tinta-dim)}
+
+  figure{margin:0 0 66px}
+  .cab{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:end;margin-bottom:18px}
+  .cab h3{font-size:23px}
+  .perg{font-size:13px;font-weight:600;color:#9A7A10;margin-bottom:7px}
+  .cab p{color:var(--tinta-dim);font-size:15.5px;margin:0}
+  figure img{width:100%;height:auto;display:block;border:1px solid var(--linha-clara);
+    border-radius:4px;background:#fff}
+
+  /* ---------------- texto corrido ---------------- */
+  .tec{background:var(--petroleo);color:var(--papel);padding:72px 0}
+  .tec h2{color:var(--papel)}
+  .bloco{display:grid;grid-template-columns:72px 1fr;gap:36px;align-items:start;
+    padding:34px 0;border-top:1px solid var(--linha)}
+  .bloco:first-of-type{border-top:0;padding-top:12px}
+  .rot{font-size:13px;font-weight:600;color:var(--ouro);padding-top:6px}
+  .corpo{max-width:68ch}
+  .corpo h3{font-size:20px;margin-bottom:12px;color:var(--papel)}
+  .corpo p{color:var(--papel-dim)}
+  .corpo strong{color:var(--papel);font-weight:600}
+  code{font:400 .92em ui-monospace,SFMono-Regular,Menlo,monospace;color:#D9E6E3}
+  pre{background:rgba(0,0,0,.26);border-left:2px solid var(--ouro);padding:14px 16px;
+    overflow-x:auto;font:400 13.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;
+    color:#CFE0DE;margin:4px 0 16px}
+  .tab-dados{border-collapse:collapse;width:100%;margin:4px 0 16px;font-size:14.5px}
+  .tab-dados th,.tab-dados td{text-align:left;padding:8px 13px 8px 0;
+    border-bottom:1px solid var(--linha);font-variant-numeric:tabular-nums}
+  .tab-dados th{font-weight:600;font-size:13px}
+  .tab-dados td{color:var(--papel-dim)}
+  ul{margin:0 0 16px;padding-left:19px;color:var(--papel-dim)}
+  li{margin-bottom:6px}
+  li::marker{color:var(--ouro)}
+
+  footer{background:#071F24;color:var(--papel-dim);padding:46px 0 62px;font-size:15px}
+  footer strong{color:var(--papel);font-weight:600}
+  footer a{border-bottom:1px solid rgba(224,181,42,.45);text-decoration:none}
+
+  @media (max-width:820px){
+    .hero-grid{grid-template-columns:1fr;gap:34px}
+    .cab{grid-template-columns:1fr;gap:10px;align-items:start}
+    .bloco{grid-template-columns:1fr;gap:10px}
+    .rot{padding-top:0}
+    .telas{padding:48px 0 10px}
+    .tec{padding:52px 0}
+    figure{margin-bottom:46px}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="marca"><i></i><span>Daniel Garcia Costa</span></div>
+      <h1>Três temporadas do Brasileirão, num modelo que se atualiza sozinho</h1>
+      <p>Dashboard em Power BI cobrindo 2024, 2025 e 2026, com extração via API,
+         modelagem dimensional própria e identidade visual gerada em código.</p>
+    </div>
+    <div>
+      <div class="tabela">
+        <div class="z1"><b>1</b>Flamengo<em>67</em></div>
+        <div class="z1"><b>2</b>Palmeiras<em>66</em></div>
+        <div class="z2"><b>8</b>Santos<em>45</em></div>
+        <div class="z2"><b>11</b>Botafogo<em>39</em></div>
+        <div class="z3"><b>19</b>Remo<em>26</em></div>
+        <div class="z3"><b>20</b>Chapecoense<em>18</em></div>
+      </div>
+      <p class="legenda">Recorte da classificação de 2026, com as zonas que o modelo calcula.</p>
+    </div>
+  </div>
+</header>
+
+<div class="faixa">
+  <div class="wrap nums">
+    <div><span>1.040</span><small>partidas</small></div>
+    <div><span>27</span><small>clubes</small></div>
+    <div><span>60</span><small>medidas DAX</small></div>
+    <div><span>5</span><small>páginas</small></div>
+    <div><span>3</span><small>temporadas</small></div>
+  </div>
+</div>
+
+<main class="telas">
+  <div class="wrap">
+    <div class="intro">
+      <h2>Cada tela responde uma pergunta</h2>
+      <p>A estrutura segue uma ordem narrativa: veredicto, trajetória, explicação,
+         protagonistas. Os números que respondem a pergunta principal vêm primeiro e com
+         mais peso visual. O detalhamento desce.</p>
+    </div>
+
+    <figure>
+      <div class="cab">
+        <div>
+          <div class="perg">Entrada</div>
+          <h3>Home</h3>
+        </div>
+        <p>Navegação limpa, sem dado nenhum. A primeira tela existe para orientar,
+           não para informar.</p>
+      </div>
+      <img src="telas/01-home.png" alt="Tela inicial do dashboard com menu de navegação" loading="lazy">
+    </figure>
+
+    <figure>
+      <div class="cab">
+        <div>
+          <div class="perg">Como está o campeonato e quem está ganhando</div>
+          <h3>Visão Geral</h3>
+        </div>
+        <p>O líder ganha bloco próprio, com escudo grande e os fatos que o distinguem.
+           A classificação completa à esquerda, os jogos da rodada e a artilharia à direita.</p>
+      </div>
+      <img src="telas/02-visao-geral.png" alt="Visão geral com classificação, destaque do líder, última rodada e artilharia" loading="lazy">
+    </figure>
+
+    <figure>
+      <div class="cab">
+        <div>
+          <div class="perg">Como está a campanha de um clube</div>
+          <h3>Análise por Time</h3>
+        </div>
+        <p>Pontos acumulados contra o próprio desempenho do ano anterior, saldo de gols
+           como área, e a vizinhança do clube na tabela — dois acima e dois abaixo.</p>
+      </div>
+      <img src="telas/03-analise-por-time.png" alt="Análise individual do Botafogo com pontos acumulados, saldo e últimos jogos" loading="lazy">
+    </figure>
+
+    <figure>
+      <div class="cab">
+        <div>
+          <div class="perg">Que caminho cada time percorreu</div>
+          <h3>Evolução na Temporada</h3>
+        </div>
+        <p>Trajetória de posição rodada a rodada com eixo invertido, e o mapa da temporada:
+           20 clubes por 38 rodadas, ordenados por classificação.</p>
+      </div>
+      <img src="telas/04-evolucao.png" alt="Trajetória na tabela e mapa de calor de resultados por rodada" loading="lazy">
+    </figure>
+
+    <figure>
+      <div class="cab">
+        <div>
+          <div class="perg">O quanto jogar em casa pesa, e para quem</div>
+          <h3>Gols &amp; Eficiência</h3>
+        </div>
+        <p>Duas dispersões comparando os 20 clubes em dois eixos ao mesmo tempo:
+           aproveitamento em casa contra fora, e ataque contra defesa.</p>
+      </div>
+      <img src="telas/05-gols-eficiencia.png" alt="Dispersões de mando e eficiência com extremos de mandantes e visitantes" loading="lazy">
+    </figure>
+  </div>
+</main>
+
+<section class="tec">
+  <div class="wrap">
+    <h2 style="margin-bottom:28px">Como foi construído</h2>
+
+    <div class="bloco">
+      <div class="rot">Problema</div>
+      <div class="corpo">
+        <p>Projetos de futebol brasileiro quase sempre param no CSV estático de uma
+           temporada. Baixa-se uma vez, analisa-se uma vez, e o arquivo envelhece.</p>
+        <p>O objetivo era outro: um modelo que <strong>continua vivo enquanto a temporada
+           corre</strong>, cobrindo três anos e permitindo comparação honesta entre uma
+           temporada em andamento e duas encerradas.</p>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <div class="rot">Dados</div>
+      <div class="corpo">
+        <h3>Três endpoints e uma API de enciclopédia</h3>
+        <p>A base vem da <strong>football-data.org</strong>, no plano gratuito. Partidas
+           trazem placar, rodada, data e situação. O endpoint de clubes traz escudo,
+           fundação e estádio. O de artilharia traz gols, assistências e pênaltis.</p>
+        <p>As fotos de estádio vêm da <strong>API do Wikimedia Commons</strong>, que devolve
+           a miniatura, o autor e a licença a partir do nome do arquivo — de forma que o
+           crédito ao fotógrafo entra no modelo junto com a imagem.</p>
+        <p>A extração usa <code>RelativePath</code> e <code>Query</code> separados no
+           <code>Web.Contents</code>, único formato que o Power BI Service aceita para
+           atualização agendada. Cada temporada roda em bloco protegido: o bloqueio de
+           uma não derruba as outras.</p>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <div class="rot">Modelo</div>
+      <div class="corpo">
+        <h3>Duas linhas por partida</h3>
+        <p>É a decisão que define o projeto. A tabela de fatos não guarda uma linha por
+           jogo, e sim duas — uma pela ótica de cada time.</p>
+        <table class="tab-dados">
+          <tr><th>id_jogo</th><th>time</th><th>adversário</th><th>mando</th><th>gols pró</th><th>pontos</th></tr>
+          <tr><td>12345</td><td>Flamengo</td><td>Palmeiras</td><td>Casa</td><td>2</td><td>3</td></tr>
+          <tr><td>12345</td><td>Palmeiras</td><td>Flamengo</td><td>Fora</td><td>1</td><td>0</td></tr>
+        </table>
+        <p>Num modelo convencional o clube aparece ora como mandante, ora como visitante.
+           Isso obriga dois relacionamentos com a mesma dimensão e espalha
+           <code>USERELATIONSHIP</code> por metade das medidas.</p>
+        <p>Com o desdobramento, somar pontos vira um <code>SUM</code> com filtro natural, e
+           a análise de mando sai de graça. O preço é dobrar as linhas — duas mil em vez
+           de mil. Irrelevante.</p>
+        <h3>A dimensão nasce do fato</h3>
+        <p>A tabela de clubes é montada a partir dos nomes que realmente vieram da API, não
+           de um CSV externo. Isso elimina o bug mais silencioso desse tipo de projeto:
+           nome divergente faz o clube sumir do visual sem erro nenhum, e o dashboard
+           continua parecendo funcionar.</p>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <div class="rot">DAX</div>
+      <div class="corpo">
+        <h3>Quatro critérios num número só</h3>
+        <p>O desempate da CBF segue quatro critérios em ordem: pontos, vitórias, saldo e
+           gols marcados. Em vez de um ranking aninhado de quatro níveis, os quatro são
+           comprimidos num índice único.</p>
+        <pre>Índice = Pontos   × 100000000
+       + Vitórias × 1000000
+       + (Saldo + 100) × 1000
+       + Gols Pró</pre>
+        <p>Cada critério ocupa uma faixa de casas decimais que os outros não alcançam, então
+           ordenar o número grande reproduz exatamente a tabela oficial.</p>
+        <h3>Comparar o incomparável</h3>
+        <p>Confrontar uma temporada em curso com uma encerrada exige cuidado. A medida de
+           pontos do ano anterior captura a rodada atual antes do cálculo e usa esse número
+           como teto. Sem isso, a comparação seria entre 31 rodadas e 38 — e a variação
+           sairia com o sinal trocado.</p>
+        <h3>Mostrar os vizinhos de um time filtrado</h3>
+        <p>Uma página filtrada por clube não consegue exibir quem está em volta dele na
+           tabela: se a dimensão está restrita, não existem outras linhas para desenhar. A
+           saída separa os papéis — as linhas vêm de uma tabela desconectada, imune ao
+           filtro, e <code>TREATAS</code> reconecta cada uma ao modelo no cálculo.</p>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <div class="rot">Visual</div>
+      <div class="corpo">
+        <h3>Identidade gerada em código</h3>
+        <p>Capas, fundos de página, placas de cartão, treze ícones de indicador e a marca
+           foram desenhados proceduralmente em Python com Pillow, na paleta petróleo,
+           dourado e azul.</p>
+        <p>As decisões foram específicas, não decorativas: o ícone de posição é medalha e
+           não pódio, porque pódio se confundiria com o de barras ao lado; o de artilheiro
+           é alvo e não bola, para não colidir com o de gols. Clubes de preto e branco
+           receberam grafite em vez de preto puro, porque preto absoluto some em barra fina.</p>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <div class="rot">Limites</div>
+      <div class="corpo">
+        <h3>O que o projeto não faz</h3>
+        <ul>
+          <li>Nenhuma fonte gratuita publica <strong>gols esperados</strong> para o
+              Brasileirão. As plataformas com xG cobrem as ligas europeias; a nossa não.</li>
+          <li>A <strong>artilharia é parcial</strong> por natureza da fonte. O endpoint lista
+              os maiores marcadores da competição, não todos os jogadores de cada clube.
+              Gol contra não é creditado a ninguém e jogador transferido aparece no clube atual.</li>
+          <li><strong>Cartões</strong> estão em plano pago da API.
+              <strong>Público</strong> exige exportação manual de fonte complementar.</li>
+        </ul>
+        <p>Documentar o que falta é parte do trabalho. Um dashboard que esconde seus limites
+           convida o leitor a confiar em número que não merece confiança.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><strong>Daniel Garcia Costa</strong><br>Power BI · Power Query M · DAX · Python</p>
+    <p>Dados de <a href="https://www.football-data.org">football-data.org</a>
+       e Wikimedia Commons. Escudos pertencem aos respectivos clubes.</p>
+  </div>
+</footer>
+
+</body>
+</html>
