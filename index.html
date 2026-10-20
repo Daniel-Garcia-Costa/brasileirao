@@ -140,6 +140,8 @@
   .contato a span{color:var(--tinta-dim);font-size:13.5px;display:block}
 
   footer{background:var(--petroleo-fundo);color:var(--papel-dim);padding:44px 0 58px;font-size:15px}
+  .rodape{display:grid;grid-template-columns:1fr auto;gap:40px;align-items:end}
+  .rodape img{width:190px;height:auto;display:block;opacity:.95}
   footer strong{color:var(--papel);font-weight:600}
   footer a{border-bottom:1px solid rgba(224,181,42,.45);text-decoration:none}
 
@@ -149,6 +151,8 @@
     .bloco{grid-template-columns:1fr;gap:10px}
     .rot{padding-top:0}
     .claro,.escuro{padding:52px 0}
+    .rodape{grid-template-columns:1fr;gap:28px;align-items:start}
+    .rodape img{width:160px}
     figure{margin-bottom:44px}
     .nav-marca span{display:none}
   }
@@ -478,10 +482,13 @@
 </section>
 
 <footer>
-  <div class="wrap">
-    <p><strong>Daniel Garcia Costa</strong><br>Power BI · Power Query M · DAX · Python</p>
-    <p>Dados de <a href="https://www.football-data.org" target="_blank" rel="noopener">football-data.org</a>
-       e Wikimedia Commons. Escudos pertencem aos respectivos clubes.</p>
+  <div class="wrap rodape">
+    <div>
+      <p><strong>Daniel Garcia Costa</strong><br>Power BI · Power Query M · DAX · Python</p>
+      <p style="margin:0">Dados de <a href="https://www.football-data.org" target="_blank" rel="noopener">football-data.org</a>
+         e Wikimedia Commons. Escudos pertencem aos respectivos clubes.</p>
+    </div>
+    <img src="logo.png" alt="Daniel Analytics">
   </div>
 </footer>
 
